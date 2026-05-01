@@ -1,0 +1,10 @@
+.env
+secrets/
+data/*.db
+data/*.db-journal
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+*.log
+.DS_Store

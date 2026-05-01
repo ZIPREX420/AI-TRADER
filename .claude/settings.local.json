@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ' *)",
+      "Bash(python tests/test_research_clock.py)",
+      "Bash(python tests/test_replay_determinism.py)",
+      "Bash(python tests/test_simulated_executor.py)",
+      "Bash(python tests/test_evaluation.py)",
+      "Bash(python tests/test_selector.py)",
+      "Bash(python tests/test_patterns.py)"
+    ]
+  }
+}

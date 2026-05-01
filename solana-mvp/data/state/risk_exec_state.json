@@ -1,0 +1,13 @@
+{
+  "consec_not_confirmed": 0,
+  "slip_history_10": [],
+  "sandwich_flags_1h": [],
+  "critical_errors_60s": [],
+  "submit_fail_history_10m": [],
+  "quarantine": {},
+  "blacklist": {},
+  "size_dampener": {"factor": 1.0, "until_trade_n": 0},
+  "trade_n": 0,
+  "day_open_equity": 0.0,
+  "loss_streak": 0
+}
