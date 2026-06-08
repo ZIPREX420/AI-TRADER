@@ -319,6 +319,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   centralised in a `_bootstrap_ctx()` helper (optional `default_profile` for the
   paper / live / research commands). Behaviour-exact; `tests/integration/test_cli.py` green.
 - `tests/` — added 20 direct unit tests: `KeypairLoader` (`foundation/secrets.py`, 22% -> 86% covered) and the four refactor helpers (`_decision`, `_aclose_quietly`, `_bootstrap_ctx`, `_sum_owned_by_signer`). Total coverage 64.6% -> 65.8%.
+- `data/rpc_pool.py`, `runtime/app.py`, `foundation/config.py` — three further
+  behavior-preserving style refactors: merged `rpc_pool._call_one`'s duplicate
+  transient-error raises into one (every non-permanent JSON-RPC code is treated
+  as transient); tabled `app._build_workers`' optional-worker appends into a
+  single list + loop; replaced `config.load_config`'s six repeated env-override
+  blocks with a data-driven `_apply_env_overrides()` over an `_ENV_OVERRIDES`
+  table. `ruff` + `mypy --strict` green; suite unchanged.
+- `tests/` — added 94 unit tests giving the execution plane comprehensive
+  mocked coverage: `jupiter` / `raydium` / `route_selector` (respx-mocked HTTP),
+  `confirmer` / `stuck_resolver` (fake-RPC + sqlite store), `retry_bump`
+  (priority-fee / slippage escalation ladder), and `tx_builder` (ephemeral
+  `solders` keypairs + mocked `getLatestBlockhash` / ALTs). Per-module coverage:
+  `confirmation` / `raydium` / `route_selector` 100%, `retry_bump` 97%,
+  `jupiter` 95%, `tx_builder` 94%, `stuck_resolver` 88%. Total line coverage
+  65.8% -> 74.4%; 231 tests pass, ruff + `mypy --strict` clean.
 
 ### Fixed
 - `foundation/state.py` — `SqliteStore.journal()` and `ParquetStore` no longer
@@ -342,6 +357,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   module unparseable and breaking import of the entire `solalpha.data` package.
   Restored to the obvious intended form; `pytest` collection and the full suite
   pass again.
+- `.dockerignore` — stopped excluding `README.md`, which the `Dockerfile`
+  `COPY`s and hatchling needs for the wheel long-description (`readme =
+  "README.md"`). The image build — and the `release.yml` Docker job — failed at
+  the COPY step with `"/README.md": not found`. Caught by a local `docker build`
+  and verified fixed by a clean rebuild.
 
 ### Security
 - `pyproject.toml` — bumped two dependencies to clear CVEs flagged by the

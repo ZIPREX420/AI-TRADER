@@ -155,6 +155,31 @@ on its next mode-manager tick (~1 s).
 
 Or stop the process; default-on-restart is PAPER.
 
+## Running under Docker
+
+The image is multi-stage (build wheel → slim runtime), runs as the non-root
+`solalpha` user, and exposes Prometheus metrics + `/health` + `/status` on
+`9464`. It starts in **PAPER** (`SOLALPHA_PROFILE=paper`, `CMD ["paper", …]`).
+
+```bash
+# Build the image
+docker build -t solalpha:dev .
+
+# Or run via compose (PAPER mode, the default)
+cp .env.example .env                 # set SOLALPHA_RPC_URLS etc. before any live use
+docker compose up -d                 # solalpha service on :9464
+docker compose --profile observability up -d   # also start Prometheus on :9090
+
+# Health / logs
+curl -s http://127.0.0.1:9464/health
+docker compose logs -f solalpha
+docker inspect --format '{{.State.Health.Status}}' solalpha
+```
+
+Live trading still requires `SOLALPHA_LIVE_TRADING=1` **and** a mounted keypair:
+set both in `.env` (gitignored) and override the command to `live`. Never bake
+secrets or a keypair into the image — mount them at runtime.
+
 ## Release procedure
 
 1. Update `CHANGELOG.md` with a new dated section.
