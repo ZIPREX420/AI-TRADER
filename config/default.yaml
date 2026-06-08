@@ -1,0 +1,129 @@
+# solalpha default config — paper mode, conservative limits.
+# Override per-profile in paper.yaml / live.yaml / research.yaml.
+# Env vars (prefix SOLALPHA_, double underscore for nesting) further override.
+
+profile: default
+mode: PAPER                # initial mode; never starts in LIVE without env flag
+live_trading: false        # config-level switch; SOLALPHA_LIVE_TRADING=1 still required
+
+logging:
+  level: info
+  format: json             # json | console
+
+persistence:
+  data_dir: ./data
+  log_dir: ./logs
+  sqlite_filename: solalpha.db
+  parquet_dir: parquet
+  snapshot_dir: snapshots
+  snapshot_interval_s: 60
+  journal_retention_days: 14
+  parquet_compaction_hour_utc: 2
+
+metrics:
+  enabled: true
+  host: 127.0.0.1
+  port: 9464
+
+rpc:
+  urls: []                 # populated via SOLALPHA_RPC_URLS or this list
+  ws_urls: []              # optional override
+  request_timeout_s: 8.0
+  ws_heartbeat_s: 15.0
+  ws_reconnect_max_s: 30.0
+  health_quarantine_s: 30.0
+  health_min_healthy: 2
+  health_window_s: 60.0
+  health_min_success_rate: 0.6
+
+jupiter:
+  base_url: https://quote-api.jup.ag/v6
+  quote_timeout_s: 5.0
+  swap_timeout_s: 8.0
+  max_retries: 3
+  default_slippage_bps: 100
+
+raydium:
+  enabled: true
+  base_url: https://api-v3.raydium.io
+  request_timeout_s: 5.0
+
+execution:
+  compute_unit_limit: 400000
+  default_priority_fee_lamports: 5000
+  bump_priority_fee_lamports: [5000, 25000, 100000]
+  bump_slippage_bps: [0, 50, 100]
+  max_attempts: 3
+  confirmation_timeout_s: 30.0
+  confirmation_poll_interval_s: 1.0
+  blockhash_max_age_slots: 150
+
+risk:
+  # All hard ceilings refused if loosened by config.
+  max_slippage_bps: 150
+  hard_slippage_ceiling_bps: 300
+  per_trade_usd_cap: 250.0
+  per_trade_pct: 0.02
+  per_mint_pct_cap: 0.05
+  max_open_positions: 8
+  max_open_positions_ceiling: 16
+  daily_loss_pct: 0.05
+  loss_streak_max: 5
+  min_confidence: 0.55
+  vol_halt_5m_pct: 0.08
+  vol_halt_duration_s: 900
+  quarantine_duration_s: 86400
+  min_pool_liquidity_usd: 25000.0
+  max_price_impact_pct: 0.025
+  max_price_impact_ceiling_pct: 0.05
+  smart_wallet_min_age_days: 7
+  smart_wallet_min_tx: 20
+  max_inflight_per_mint: 1
+  starting_equity_usd: 1000.0   # only used in paper mode for sizing math
+
+mode_manager:
+  hysteresis_live_to_degraded_rpc_s: 10.0
+  hysteresis_degraded_rpc_to_live_s: 30.0
+  hysteresis_live_to_degraded_exec_s: 30.0
+  hysteresis_degraded_exec_to_live_s: 60.0
+  hysteresis_to_paper_s: 120.0
+  paper_to_live_health_s: 300.0
+  degraded_rpc_confidence_bonus: 0.15
+  degraded_rpc_size_factor: 0.5
+
+signals:
+  prepump:
+    window_s: 90
+    min_buy_pressure_ratio: 1.6
+    min_liquidity_slope_pct_per_min: 0.05
+  cluster:
+    wallets_required: 3
+    window_s: 120
+    min_total_buy_usd: 1500.0
+  flow_anomaly:
+    baseline_window_s: 1800
+    z_threshold: 2.5
+  weights:
+    prepump: 0.35
+    cluster: 0.45
+    flow_anomaly: 0.20
+
+smart_wallets:
+  decay_half_life_days: 14.0
+  min_score_to_subscribe: 0.20
+  max_subscriptions: 200
+
+research:
+  allow_live_writes: false
+  walkforward_train_days: 14
+  walkforward_test_days: 3
+  min_oos_sharpe: 0.5
+
+kill_switch:
+  file_path: ./data/.kill
+  poll_interval_s: 1.0
+
+paper_executor:
+  fee_bps: 30                  # simulated DEX fee (0.30%)
+  base_slippage_bps: 25
+  impact_slippage_per_pct: 8.0  # extra bps per 1% price impact

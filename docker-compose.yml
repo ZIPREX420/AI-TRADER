@@ -1,0 +1,48 @@
+services:
+  solalpha:
+    image: solalpha:dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: solalpha
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      SOLALPHA_PROFILE: paper
+      SOLALPHA_METRICS_HOST: 0.0.0.0
+    ports:
+      - "9464:9464"
+    volumes:
+      - solalpha-data:/var/lib/solalpha
+      - solalpha-logs:/var/log/solalpha
+    networks:
+      - solalpha
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:9464/health', timeout=3).status == 200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: solalpha-prometheus
+    restart: unless-stopped
+    profiles: ["observability"]
+    volumes:
+      - ./docs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - solalpha
+
+volumes:
+  solalpha-data: {}
+  solalpha-logs: {}
+  prometheus-data: {}
+
+networks:
+  solalpha:
+    driver: bridge

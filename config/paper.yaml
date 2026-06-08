@@ -1,0 +1,7 @@
+profile: paper
+mode: PAPER
+live_trading: false
+metrics:
+  port: 9464
+risk:
+  starting_equity_usd: 1000.0

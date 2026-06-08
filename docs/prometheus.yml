@@ -1,0 +1,17 @@
+# Prometheus scrape config for solalpha.
+# Mounted read-only by docker-compose.yml under the "observability" profile:
+#   docker compose --profile observability up
+# The solalpha container exposes the Prometheus exposition format at :9464/metrics
+# (see config/*.yaml -> metrics, and src/solalpha/foundation/metrics.py).
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: solalpha
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["solalpha:9464"]
+        labels:
+          service: solalpha

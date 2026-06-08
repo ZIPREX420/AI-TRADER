@@ -1,0 +1,8 @@
+profile: live
+mode: PAPER                  # still starts in PAPER and promotes only after health gate
+live_trading: true           # config OK, but SOLALPHA_LIVE_TRADING=1 env still required
+metrics:
+  port: 9464
+risk:
+  per_trade_usd_cap: 250.0
+  max_open_positions: 6      # tighter in live

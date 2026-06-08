@@ -1,0 +1,97 @@
+name: security
+
+# Dependency, static-analysis, and secret scanning. Runs on every push and
+# PR to main and on a weekly schedule so newly-disclosed CVEs in pinned
+# dependencies are caught even when the code itself is not changing.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Mondays 07:00 UTC -- pick up weekend CVE disclosures.
+    - cron: "0 7 * * 1"
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  pip-audit:
+    name: pip-audit (dependency CVEs)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Audit installed dependencies
+        # Audits the fully-resolved environment, so transitive pins are
+        # covered too. pip-audit exits non-zero when a known vulnerability
+        # is found. `--strict` is deliberately NOT used: it would also fail
+        # on skipped packages, and the editable-installed `solalpha` package
+        # itself is unavoidably skipped (it is not published to PyPI).
+        run: pip-audit --desc
+
+  bandit:
+    name: bandit (static analysis)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install bandit
+        run: |
+          python -m pip install --upgrade pip
+          pip install "bandit>=1.7,<2"
+
+      - name: Scan source for security issues
+        # Only the shipped package is scanned (tests deliberately use asserts
+        # and fixtures). Medium+ severity / medium+ confidence fails the job.
+        run: bandit -r src/solalpha --severity-level medium --confidence-level medium
+
+  detect-secrets:
+    name: detect-secrets (no new secrets)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install detect-secrets
+        run: |
+          python -m pip install --upgrade pip
+          pip install "detect-secrets==1.5.0"
+
+      - name: Scan tracked files against committed baseline
+        # detect-secrets-hook scans each tracked file and fails if it finds a
+        # secret that is not already recorded in .secrets.baseline. It does
+        # NOT mutate the baseline, so there is no timestamp/key-order churn
+        # to diff against. This mirrors the local pre-commit detect-secrets
+        # hook exactly. To audit a new finding, run locally:
+        #   detect-secrets scan --baseline .secrets.baseline && detect-secrets audit .secrets.baseline
+        run: detect-secrets-hook --baseline .secrets.baseline $(git ls-files)

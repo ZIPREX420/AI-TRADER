@@ -1,0 +1,9 @@
+profile: research
+mode: PAPER
+live_trading: false
+research:
+  allow_live_writes: false   # NEVER true; readonly_guard enforces
+  walkforward_train_days: 30
+  walkforward_test_days: 7
+metrics:
+  enabled: false             # research jobs are batch, no Prom server
